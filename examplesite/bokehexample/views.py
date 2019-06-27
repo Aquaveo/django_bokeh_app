@@ -1,76 +1,77 @@
+import datetime as dt
 from django.shortcuts import render
-
+import param
+import panel as pn
 import numpy as np
-
-from bokeh.layouts import row, widgetbox
-from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import Slider, TextInput
 from bokeh.plotting import figure
 
-from bokeh.resources import CDN
-from bokeh.embed import components
 
+class Shape(param.Parameterized):
+
+    radius = param.Number(default=1, bounds=(0, 1))
+
+    def __init__(self, **params):
+        super(Shape, self).__init__(**params)
+        self.figure = figure(x_range=(-1, 1), y_range=(-1, 1))
+        self.renderer = self.figure.line(*self._get_coords())
+
+    def _get_coords(self):
+        return [], []
+
+    def view(self):
+        return self.figure
+
+class Circle(Shape):
+
+    n = param.Integer(default=100, precedence=-1)
+    
+    def __init__(self, **params):
+        super(Circle, self).__init__(**params)
+        
+    def _get_coords(self):
+        angles = np.linspace(0, 2*np.pi, self.n+1)
+        return (self.radius*np.sin(angles),
+                self.radius*np.cos(angles))
+        
+    @param.depends('radius', watch=True)
+    def update(self):
+        xs, ys = self._get_coords()
+        self.renderer.data_source.data.update({'x': xs, 'y': ys})
+    
+class NGon(Circle):
+
+    n = param.Integer(default=3, bounds=(3, 10), precedence=1)
+
+    @param.depends('radius', 'n', watch=True)
+    def update(self):
+        xs, ys = self._get_coords()
+        self.renderer.data_source.data.update({'x': xs, 'y': ys})
+
+
+shapes = [NGon(), Circle()]
+
+
+class ShapeViewer(param.Parameterized):
+    
+    shape = param.ObjectSelector(default=shapes[0], objects=shapes)
+    
+    @param.depends('shape')
+    def view(self):
+        return self.shape.view()
+    
+    @param.depends('shape', 'shape.radius')
+    def title(self):
+        return '## %s (radius=%.1f)' % (type(self.shape).__name__, self.shape.radius)
+    
+    def panel(self):
+        return pn.Column(self.title, self.view)
 
 def home(request):
-    
-    # Set up data
-    N = 200
-    x = np.linspace(0, 4*np.pi, N)
-    y = np.sin(x)
-    source = ColumnDataSource(data=dict(x=x, y=y))
-    
-    
-    # Set up plot
-    plot = figure(plot_height=400, plot_width=400, title="my sine wave",
-                  tools="crosshair,pan,reset,save,wheel_zoom",
-                  x_range=[0, 4*np.pi], y_range=[-2.5, 2.5])
-    
-    plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
-    
-    
-    # Set up widgets
-    text = TextInput(title="title", value='my sine wave')
-    offset = Slider(title="offset", value=0.0, start=-5.0, end=5.0, step=0.1)
-    amplitude = Slider(title="amplitude", value=1.0, start=-5.0, end=5.0, step=0.1)
-    phase = Slider(title="phase", value=0.0, start=0.0, end=2*np.pi)
-    freq = Slider(title="frequency", value=1.0, start=0.1, end=5.1, step=0.1)
-    
-    
-    # Set up callbacks
-    def update_title(attrname, old, new):
-    
-        plot.title.text = text.value
-    
-    
-    text.on_change('value', update_title)
-    
-    
-    def update_data(attrname, old, new):
-    
-        # Get the current slider values
-        a = amplitude.value
-        b = offset.value
-        w = phase.value
-        k = freq.value
-    
-        # Generate the new curve
-        x = np.linspace(0, 4*np.pi, N)
-        y = a*np.sin(k*x + w) + b
-    
-        source.data = dict(x=x, y=y)
-    
-    
-    for w in [offset, amplitude, phase, freq]:
-    
-        w.on_change('value', update_data)
-    
-    
-    # Set up layouts and add to document
-    widget = widgetbox(text, offset, amplitude, phase, freq)
-
+    viewer = ShapeViewer()
+    panel = pn.Row(viewer.param, viewer.panel())
+    panel.socket = "/bokehexample/ws"  # not sure how we would bind the websocket to the widget
     context = {
-        'widget': widget
-        'websocket_path': "/bokehexample/ws" # not sure how we would bind the websocket to the widget
+        'panel': panel
     }
 
     return render(request, 'bokehexample/home.html', context)
