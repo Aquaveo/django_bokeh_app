@@ -1,4 +1,3 @@
-{% load bokeh %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +9,6 @@
     <link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-    {% bokeh widget %}
+    {{ panel.show }}
 </body>
 </html>
