@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Bokeh Example with Channels</title>
-    {# Manually include needed scripts and style #}
-    <script src="http://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.js"></script>
-    <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.js"></script>
-    <link rel="stylesheet" href="http://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.css">
-    <link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8">
+  <title>Bokeh Example with Channels</title>
 </head>
 <body>
-    {# Alternatively, rendering panel, script, and style elements could be handled by one or more custom template tags #}
-    {{ panel.show }}
+  {{ script|safe }}
 </body>
 </html>

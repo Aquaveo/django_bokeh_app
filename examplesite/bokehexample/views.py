@@ -1,9 +1,11 @@
-import datetime as dt
 from django.shortcuts import render
+from django.http import HttpRequest, HttpResponse
 import param
 import panel as pn
 import numpy as np
 from bokeh.plotting import figure
+from bokeh.document import Document
+from bokeh.embed import server_document
 
 
 class Shape(param.Parameterized):
@@ -66,12 +68,11 @@ class ShapeViewer(param.Parameterized):
     def panel(self):
         return pn.Column(self.title, self.view)
 
-def home(request):
+def shape_viewer_handler(doc: Document) -> None:
     viewer = ShapeViewer()
     panel = pn.Row(viewer.param, viewer.panel())
-    panel.socket = "/bokehexample/ws"  # not sure how we would bind the websocket to the widget
-    context = {
-        'panel': panel
-    }
+    panel.server_doc(doc)
 
-    return render(request, 'bokehexample/home.html', context)
+def home(request: HttpRequest) -> HttpResponse:
+    script = server_document(request.build_absolute_uri())
+    return render(request, "bokehexample/home.html", dict(script=script))
