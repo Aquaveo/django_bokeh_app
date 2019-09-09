@@ -76,3 +76,7 @@ def shape_viewer_handler(doc: Document) -> None:
 def home(request: HttpRequest) -> HttpResponse:
     script = server_document(request.build_absolute_uri())
     return render(request, "bokehexample/home.html", dict(script=script))
+
+def url_pattern_test(request: HttpRequest, id) -> HttpResponse:
+    script = server_document(request.build_absolute_uri())
+    return render(request, "bokehexample/home.html", dict(script=script))

@@ -16,9 +16,12 @@ from bokeh.server.django import autoload
 bokeh_app = autoload("bokehexample", views.shape_viewer_handler)
 kwargs = dict(app_context=bokeh_app.app_context)
 
-ws_urls = [url(r'^bokehexample/ws$', WSConsumer, kwargs=kwargs)]
-http_urls = [url(r'^bokehexample/autoload.js$', AutoloadJsConsumer, kwargs=kwargs), url(r'', AsgiHandler)]
+ws_urls = [url(r'^bokehexample/ws$', WSConsumer, kwargs=kwargs),
+           url(r'^bokehexample/<str:id>/ws$', WSConsumer, kwargs=kwargs)]
 
+http_urls = [url(r'^bokehexample/autoload.js$', AutoloadJsConsumer, kwargs=kwargs),
+             url(r'^bokehexample/<str:id>/autoload.js$', AutoloadJsConsumer, kwargs=kwargs),url(r'', AsgiHandler)]
+breakpoint()
 application = ProtocolTypeRouter({
     # (http->django views is added by default)
     'websocket': AuthMiddlewareStack(
