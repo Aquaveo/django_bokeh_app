@@ -121,5 +121,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+from bokeh.settings import bokehjsdir
+STATICFILES_DIRS = [bokehjsdir()]
+
 # Channels
 ASGI_APPLICATION = 'examplesite.routing.application'
