@@ -2,7 +2,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.http import AsgiHandler
 
-from django.conf.urls import url
+from django.conf.urls import re_path
 
 import sys
 sys.path.append("..")
@@ -16,18 +16,18 @@ from bokeh.server.django import autoload
 bokeh_app = autoload("bokehexample", views.shape_viewer_handler)
 kwargs = dict(app_context=bokeh_app.app_context)
 
-bokeh_app_with_variable = autoload(r'^bokehexample/<str:id>/autoload.js$', views.shape_viewer_handler)
+bokeh_app_with_variable = autoload(r'^bokehexample/(?P<id>[0-9A-Za-z-_.]+)/autoload.js$', views.shape_viewer_handler)
 kwargs_with_variable = dict(app_context=bokeh_app_with_variable.app_context)
 
-ws_urls = [url(r'^bokehexample/ws$', WSConsumer, kwargs=kwargs),
-           url(r'^bokehexample/<str:id>/ws$', WSConsumer, kwargs=kwargs_with_variable)]
+ws_urls = [re_path(r'^bokehexample/ws$', WSConsumer, kwargs=kwargs),
+           re_path(r'^bokehexample/(?P<id>[0-9A-Za-z-_.]+)/ws$', WSConsumer, kwargs=kwargs_with_variable)]
 
-http_urls = [url(r'^bokehexample/autoload.js$', AutoloadJsConsumer, kwargs=kwargs),
-             url(r'^bokehexample/<str:id>/autoload.js$', AutoloadJsConsumer, kwargs=kwargs_with_variable),
-             url(r'', AsgiHandler)]
+http_urls = [re_path(r'^bokehexample/autoload.js$', AutoloadJsConsumer, kwargs=kwargs),
+             re_path(r'^bokehexample/(?P<id>[0-9A-Za-z-_.]+)/autoload.js$', AutoloadJsConsumer,
+                     kwargs=kwargs_with_variable),
+             re_path(r'', AsgiHandler)]
 
 application = ProtocolTypeRouter({
-    # (http->django views is added by default)
     'websocket': AuthMiddlewareStack(
         URLRouter(ws_urls)
     ),
